@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>Quiz de Bandeiras</title>
+<script src="https://cdn.tailwindcss.com/3.4.17"></script>
+<link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;700;800&display=swap" rel="stylesheet">
+<style>
+*{font-family:'Nunito',sans-serif}
+body{background:#0d1b2a}
+.phone{max-width:420px;margin:auto;min-height:100vh;background:linear-gradient(180deg,#1e3a5f,#0d1b2a);display:flex;flex-direction:column}
+.progress{height:6px;background:#ffffff33;border-radius:999px;overflow:hidden}
+.progress>div{height:100%;background:#10b981;width:0%;transition:width .4s}
+@keyframes pop{0%{transform:scale(.9)}50%{transform:scale(1.05)}100%{transform:scale(1)}}
+.correct{animation:pop .35s;background:#10b98122}
+.wrong{animation:pop .35s;background:#ef444422}
+</style>
+</head>
+<body>
+<div class="phone text-white p-5 gap-4">
+
+<header class="text-center">
+<h1 class="text-2xl font-extrabold">🌍 Quiz de Bandeiras</h1>
+<p class="text-sm text-blue-200">Pontos <span id="score">0</span> • ❤️ <span id="lives">3</span> • Recorde <span id="high">0</span></p>
+<div class="progress mt-3"><div id="bar"></div></div>
+<div class="text-center mt-2"><button id="mode" class="bg-white/20 px-3 py-1 rounded-xl text-sm">Modo: Normal</button></div>
+</header>
+
+<main class="flex-1 flex flex-col items-center justify-center gap-6">
+<div id="card" class="bg-white text-black rounded-3xl p-4 shadow-xl w-full">
+<div id="flag" class="w-full h-44 rounded-2xl bg-gray-200 flex items-center justify-center"></div>
+</div>
+
+<div id="options" class="grid grid-cols-1 gap-3 w-full"></div>
+</main>
+
+<footer class="pb-4">
+<button id="next" class="hidden w-full bg-amber-400 text-white font-bold py-4 rounded-2xl">Próxima</button>
+</footer>
+</div>
+
+<script>
+const countries=[
+{name:'Brasil',code:'br'},{name:'Argentina',code:'ar'},{name:'Chile',code:'cl'},{name:'Colômbia',code:'co'},{name:'Peru',code:'pe'},{name:'Uruguai',code:'uy'},{name:'Paraguai',code:'py'},{name:'Bolívia',code:'bo'},{name:'Equador',code:'ec'},{name:'Venezuela',code:'ve'},
+{name:'Estados Unidos',code:'us'},{name:'Canadá',code:'ca'},{name:'México',code:'mx'},{name:'Cuba',code:'cu'},{name:'Costa Rica',code:'cr'},{name:'Panamá',code:'pa'},
+{name:'Portugal',code:'pt'},{name:'Espanha',code:'es'},{name:'França',code:'fr'},{name:'Alemanha',code:'de'},{name:'Itália',code:'it'},{name:'Reino Unido',code:'gb'},{name:'Irlanda',code:'ie'},{name:'Holanda',code:'nl'},{name:'Bélgica',code:'be'},{name:'Suíça',code:'ch'},{name:'Áustria',code:'at'},{name:'Polônia',code:'pl'},{name:'República Tcheca',code:'cz'},{name:'Hungria',code:'hu'},{name:'Romênia',code:'ro'},{name:'Bulgária',code:'bg'},{name:'Grécia',code:'gr'},{name:'Turquia',code:'tr'},{name:'Ucrânia',code:'ua'},
+{name:'Suécia',code:'se'},{name:'Noruega',code:'no'},{name:'Finlândia',code:'fi'},{name:'Dinamarca',code:'dk'},{name:'Islândia',code:'is'},
+{name:'Rússia',code:'ru'},{name:'China',code:'cn'},{name:'Japão',code:'jp'},{name:'Coreia do Sul',code:'kr'},{name:'Coreia do Norte',code:'kp'},{name:'Índia',code:'in'},{name:'Paquistão',code:'pk'},{name:'Bangladesh',code:'bd'},{name:'Tailândia',code:'th'},{name:'Vietnã',code:'vn'},{name:'Malásia',code:'my'},{name:'Indonésia',code:'id'},{name:'Filipinas',code:'ph'},{name:'Singapura',code:'sg'},{name:'Mongólia',code:'mn'},
+{name:'Arábia Saudita',code:'sa'},{name:'Emirados Árabes Unidos',code:'ae'},{name:'Israel',code:'il'},{name:'Irã',code:'ir'},{name:'Iraque',code:'iq'},{name:'Catar',code:'qa'},{name:'Kuwait',code:'kw'},
+{name:'Egito',code:'eg'},{name:'Marrocos',code:'ma'},{name:'Argélia',code:'dz'},{name:'Tunísia',code:'tn'},{name:'Nigéria',code:'ng'},{name:'Quênia',code:'ke'},{name:'Etiópia',code:'et'},{name:'Gana',code:'gh'},{name:'Camarões',code:'cm'},{name:'África do Sul',code:'za'},
+{name:'Austrália',code:'au'},{name:'Nova Zelândia',code:'nz'},{name:'Fiji',code:'fj'},{name:'Papua-Nova Guiné',code:'pg'}
+];
+const easy=['br','us','gb','fr','de','it','es','jp','cn','ca','au','pt','ar','mx'];
+const groups={nordic:['se','fi','dk','no'],iberian:['es','pt'],eastasia:['jp','kr','cn'],southamerica:['br','ar','uy','cl','pe','co'],oceania:['au','nz']};
+function similarPool(code,p){for(const g of Object.values(groups))if(g.includes(code))return p.filter(c=>g.includes(c.code)&&c.code!==code);return [];}
+let expert=false;document.getElementById('mode').onclick=()=>{expert=!expert;document.getElementById('mode').textContent='Modo: '+(expert?'Expert':'Normal');};
+let score=0,round=0,maxRounds=Infinity,current=null,gameOver=false,lives=3;let high=Number(localStorage.getItem('flag_high')||0);
+document.getElementById('high').textContent=high;document.getElementById('lives').textContent=lives;
+function shuffle(a){return [...a].sort(()=>Math.random()-0.5)}
+function pool(){if(expert)return countries.filter(c=>!easy.includes(c.code));if(round>20)return countries.filter(c=>!easy.includes(c.code));if(round>10)return countries.filter(c=>!easy.slice(0,8).includes(c.code));return countries;}
+function loadFlag(c){const el=document.getElementById('flag');el.innerHTML='<div class="animate-pulse w-full h-full bg-gray-300"></div>';const img=new Image();img.src=`https://flagcdn.com/w320/${c.code}.png`;img.onload=()=>{el.innerHTML='';img.className='w-full h-full object-cover rounded-xl';el.appendChild(img)}}
+function updateBar(){document.getElementById('bar').style.width=(round/maxRounds*100)+'%'}
+function playTone(freq,duration){const ctx=new (window.AudioContext||window.webkitAudioContext)();const osc=ctx.createOscillator();const gain=ctx.createGain();osc.type='sine';osc.frequency.value=freq;osc.connect(gain);gain.connect(ctx.destination);osc.start();gain.gain.setValueAtTime(.2,ctx.currentTime);gain.gain.exponentialRampToValueAtTime(.001,ctx.currentTime+duration);osc.stop(ctx.currentTime+duration);}function feedback(ok){const card=document.getElementById('card');card.classList.remove('correct','wrong');void card.offsetWidth;card.classList.add(ok?'correct':'wrong');if(ok){playTone(880,.18);setTimeout(()=>playTone(1320,.15),120);if(navigator.vibrate)navigator.vibrate(40);}else{playTone(180,.25);setTimeout(()=>playTone(120,.3),120);if(navigator.vibrate)navigator.vibrate([120,60,120]);}}
+function nextRound(){if(gameOver)return;round++;updateBar();const p=pool();current=p[Math.floor(Math.random()*p.length)];loadFlag(current);let distractors=similarPool(current.code,p);if(distractors.length<3)distractors=shuffle(p.filter(c=>c!==current)).slice(0,3);else distractors=shuffle(distractors).slice(0,3);const opts=shuffle([current,...distractors]);const cont=document.getElementById('options');cont.innerHTML='';document.getElementById('next').classList.add('hidden');opts.forEach(o=>{const b=document.createElement('button');b.className='bg-white text-black font-bold py-4 rounded-2xl shadow active:scale-95';b.textContent=o.name;b.onclick=()=>{if(gameOver)return;const ok=o.name===current.name;document.querySelectorAll('#options button').forEach(x=>x.disabled=true);if(ok){score+=10;document.getElementById('score').textContent=score;feedback(true);setTimeout(nextRound,600);}else{lives--;document.getElementById('lives').textContent=lives;feedback(false);if(lives<=0){gameOver=true;if(score>high)localStorage.setItem('flag_high',score);setTimeout(()=>alert('Fim! Pontuação: '+score),300);}else setTimeout(nextRound,900);} };cont.appendChild(b)})}
+nextRound();
+</script>
+</body>
+</html>
