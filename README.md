@@ -1,1 +1,1 @@
-Link do jogo: ttps://luizagostinho.github.io/jogo-da-bandeira/
+Link do jogo: https://luizagostinho.github.io/jogo-da-bandeira/
